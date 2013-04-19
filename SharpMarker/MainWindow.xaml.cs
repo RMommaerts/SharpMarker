@@ -1,17 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace SharpMarker
 {
@@ -20,54 +10,67 @@ namespace SharpMarker
     /// </summary>
     public partial class MainWindow : Window
     {
-        Point _lastPoint = new Point(0, 0);
+        private Point _lastPoint = new Point(0, 0);
 
-        Point _selectDown;
-        Point _selectUp;
-        SelectionState _selectionState;
+        private ICanvasTool _activeTool;
+        private Action _toolCompletedCallback;
         
         public MainWindow()
         {
             InitializeComponent();
-            _selectionState = SelectionState.NotStarted;
+
+            _activeTool = null;
+            _toolCompletedCallback = null;
 
             imageCanvas.ImageMouseMove += imageCanvas_ImageMouseMove;
             imageCanvas.ImageMouseDown += imageCanvas_MouseDown;
             imageCanvas.ImageMouseUp += imageCanvas_MouseUp;
-        }
-
-        private void SelectionCompleted()
-        {
-            imageCanvas.Crop(new Rect(_selectDown, _selectUp));
+            imageCanvas.KeyUp += _OnImageKeyUp;
         }
 
         void imageCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (e.ChangedButton == MouseButton.Left && _selectionState == SelectionState.WaitingForUp)
+            if (HasActiveCanvasTool)
             {
-                _selectionState = SelectionState.NotStarted;
-                _selectUp = e.GetPosition((IInputElement)sender);
-
-                SelectionCompleted();
+                _activeTool.OnMouseUp((IInputElement)sender, e);
             }
         }
 
         void imageCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.ChangedButton == MouseButton.Left && _selectionState == SelectionState.WaitingForDown)
+            if (HasActiveCanvasTool)
             {
-                _selectionState = SelectionState.WaitingForUp;
-                _selectDown = e.GetPosition((IInputElement)sender);
+                _activeTool.OnMouseDown((IInputElement)sender, e);
             }
         }
 
         private void imageCanvas_ImageMouseMove(object sender, MouseEventArgs e)
         {
-            _lastPoint = e.GetPosition((IInputElement)sender);
+            var senderAsInputElement = (IInputElement)sender;
+
+            _lastPoint = e.GetPosition(senderAsInputElement);
             this.Title = string.Format("X: [{0:F2}] Y: [{1:F2}]", _lastPoint.X, _lastPoint.Y);
+
+            if (HasActiveCanvasTool)
+            {
+                _activeTool.OnMouseMove(senderAsInputElement, e);
+            }
+        }
+
+        private void _OnImageKeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.V && e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Control))
+            {
+                _PasteFromClipboardToCanvas();
+            }
         }
 
         private void btnGo_Click(object sender, RoutedEventArgs e)
+        {
+            _PasteFromClipboardToCanvas();
+        }
+
+        private void _PasteFromClipboardToCanvas()
         {
             if (Clipboard.ContainsImage())
             {
@@ -78,14 +81,44 @@ namespace SharpMarker
 
         private void btnSelect_Click(object sender, RoutedEventArgs e)
         {
-            _selectionState = SelectionState.WaitingForDown;
+            btnSelect.IsEnabled = false;
+            _SetActiveTool(new CropTool(imageCanvas), delegate { btnSelect.IsEnabled = true; });
         }
 
-        private enum SelectionState
+        private void _SetActiveTool(ICanvasTool tool, Action callback)
         {
-            NotStarted,
-            WaitingForDown,
-            WaitingForUp
+            if (HasActiveCanvasTool)
+            {
+                OnActiveToolCompleted(this, EventArgs.Empty);
+            }
+
+            _activeTool = tool;
+            _toolCompletedCallback = callback;
+            _activeTool.Completed += OnActiveToolCompleted;
+        }
+
+        private void OnActiveToolCompleted(object sender, EventArgs e)
+        {
+            if (_toolCompletedCallback != null)
+            {
+                _toolCompletedCallback();
+            }
+
+            _activeTool.Completed -= OnActiveToolCompleted;
+            _activeTool = null;
+
+            imageCanvas.ClearOverlay();
+        }
+
+        public bool HasActiveCanvasTool
+        {
+            get { return _activeTool != null; }
+        }
+
+        private void btnMeasure_Click(object sender, RoutedEventArgs e)
+        {
+            btnMeasure.IsEnabled = false;
+            _SetActiveTool(new MeasureTool(imageCanvas), delegate { btnMeasure.IsEnabled = true; });
         }
     }
 }

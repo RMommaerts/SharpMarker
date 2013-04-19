@@ -1,18 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace SharpMarker
 {
@@ -38,6 +32,31 @@ namespace SharpMarker
             InitializeComponent();
         }
 
+        public void SetOverlay(IEnumerable<UIElement> toAdd)
+        {
+            ClearOverlay();
+            foreach (UIElement element in toAdd)
+            {
+                canvasOverlay.Children.Add(element);
+            }
+        }
+
+        public void ClearOverlay()
+        {
+            canvasOverlay.Children.Clear();
+        }
+
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            // This never gets called...
+            if (KeyUp != null)
+            {
+                KeyUp(this, e);
+            }
+            
+            base.OnKeyUp(e);
+        }
+
         public void SetSource(BitmapSource source)
         {
             _widthPixels = source.PixelWidth;
@@ -47,7 +66,7 @@ namespace SharpMarker
             _dpiX = source.DpiX;
             _dpiY = source.DpiY;
             
-            _stride = GetStride(_widthPixels, _pixelFormat.BitsPerPixel);
+            _stride = _GetStride(_widthPixels, _pixelFormat.BitsPerPixel);
 
             _pixels = new byte[_stride * _heightPixels];
             source.CopyPixels(_pixels, _stride, offset: 0);
@@ -59,11 +78,11 @@ namespace SharpMarker
                 _pixels[i] = byte.MaxValue;
             }
 
-            ReconstructBitmap();
-            SetSourceToInteralBitmap();
+            _ReconstructBitmap();
+            _SetSourceToInteralBitmap();
         }
 
-        private void SetSourceToInteralBitmap()
+        private void _SetSourceToInteralBitmap()
         {
             Debug.Assert(_bitmap != null);
             
@@ -76,6 +95,9 @@ namespace SharpMarker
 
             canvas.Width = _bitmap.PixelWidth;
             canvas.Height = _bitmap.PixelHeight;
+
+            canvasOverlay.Width = _bitmap.PixelWidth;
+            canvasOverlay.Height = _bitmap.PixelHeight;
         }
 
         public void Crop(Rect rect)
@@ -85,25 +107,25 @@ namespace SharpMarker
             _widthPixels = intRect.Width;
             _heightPixels = intRect.Height;
 
-            _stride = GetStride(_widthPixels, _pixelFormat.BitsPerPixel);
+            _stride = _GetStride(_widthPixels, _pixelFormat.BitsPerPixel);
             _pixels = new byte[_stride * _heightPixels];
             _bitmap.CopyPixels(intRect, _pixels, _stride, offset: 0);
             
-            ReconstructBitmap();
-            SetSourceToInteralBitmap();
+            _ReconstructBitmap();
+            _SetSourceToInteralBitmap(); 
         }
 
-        private void ReconstructBitmap()
+        private void _ReconstructBitmap()
         {
             _bitmap = BitmapSource.Create(_widthPixels, _heightPixels, _dpiX, _dpiY, _pixelFormat, _palette, _pixels, _stride);
         }
 
-        private static int GetStride(int bitmapWidthPixels, int bitmapBitsPerPixel)
+        private static int _GetStride(int bitmapWidthPixels, int bitmapBitsPerPixel)
         {
             return bitmapWidthPixels * ((bitmapBitsPerPixel + 7) / 8);
         }
 
-        private void OnImageMouseMove(object sender, MouseEventArgs e)
+        private void _OnImageMouseMove(object sender, MouseEventArgs e)
         {
             if (ImageMouseMove != null)
             {
@@ -111,7 +133,7 @@ namespace SharpMarker
             }
         }
 
-        private void OnImageMouseDown(object sender, MouseButtonEventArgs e)
+        private void _OnImageMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (ImageMouseDown != null)
             {
@@ -119,7 +141,7 @@ namespace SharpMarker
             }
         }
 
-        private void OnImageMouseUp(object sender, MouseButtonEventArgs e)
+        private void _OnImageMouseUp(object sender, MouseButtonEventArgs e)
         {
             if (ImageMouseUp != null)
             {
@@ -130,5 +152,6 @@ namespace SharpMarker
         public event EventHandler<MouseEventArgs> ImageMouseMove;
         public event EventHandler<MouseButtonEventArgs> ImageMouseDown;
         public event EventHandler<MouseButtonEventArgs> ImageMouseUp;
+        public event KeyEventHandler KeyUp;
     }
 }

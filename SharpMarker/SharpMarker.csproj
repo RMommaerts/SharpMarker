@@ -65,6 +65,9 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MeasureTool.cs" />
+    <Compile Include="CropTool.cs" />
+    <Compile Include="ICanvasTool.cs" />
     <Compile Include="ImageCanvas.xaml.cs">
       <DependentUpon>ImageCanvas.xaml</DependentUpon>
     </Compile>

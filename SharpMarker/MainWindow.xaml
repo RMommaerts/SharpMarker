@@ -7,10 +7,11 @@
         <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom">
             <Button Name="btnGo" Content="Paste Clipboard" Click="btnGo_Click"  />
             <Button Name="btnSelect" Click="btnSelect_Click">Select Region</Button>
+            <Button Name="btnMeasure" Click="btnMeasure_Click">Measure Tool</Button>
         </StackPanel>
         
         <ScrollViewer HorizontalScrollBarVisibility="Visible">
-            <sm:ImageCanvas VerticalAlignment="Top" HorizontalAlignment="Left" x:Name="imageCanvas"></sm:ImageCanvas>
+            <sm:ImageCanvas VerticalAlignment="Top" HorizontalAlignment="Left" x:Name="imageCanvas" KeyUp="_OnImageKeyUp"></sm:ImageCanvas>
         </ScrollViewer>
     </DockPanel>
 </Window>
