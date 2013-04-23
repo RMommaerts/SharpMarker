@@ -46,17 +46,6 @@ namespace SharpMarker
             canvasOverlay.Children.Clear();
         }
 
-        protected override void OnKeyUp(KeyEventArgs e)
-        {
-            // This never gets called...
-            if (KeyUp != null)
-            {
-                KeyUp(this, e);
-            }
-            
-            base.OnKeyUp(e);
-        }
-
         public void SetSource(BitmapSource source)
         {
             _widthPixels = source.PixelWidth;
@@ -152,6 +141,5 @@ namespace SharpMarker
         public event EventHandler<MouseEventArgs> ImageMouseMove;
         public event EventHandler<MouseButtonEventArgs> ImageMouseDown;
         public event EventHandler<MouseButtonEventArgs> ImageMouseUp;
-        public event KeyEventHandler KeyUp;
     }
 }
