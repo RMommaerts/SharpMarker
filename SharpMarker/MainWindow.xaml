@@ -8,6 +8,8 @@
             <Button Name="btnGo" Content="Paste Clipboard" Click="btnGo_Click"  />
             <Button Name="btnSelect" Click="btnSelect_Click">Select Region</Button>
             <Button Name="btnMeasure" Click="btnMeasure_Click">Measure Tool</Button>
+            <Button Name="btnZoomIn" Click="btnZoomIn_Click">Zoom In</Button>
+            <Button Name="btnZoomOut" Click="btnZoomOut_Click">Zoom Out</Button>
         </StackPanel>
         
         <ScrollViewer HorizontalScrollBarVisibility="Visible">

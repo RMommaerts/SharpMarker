@@ -24,12 +24,15 @@ namespace SharpMarker
         private int _widthPixels;
         private int _heightPixels;
 
+        private Size _scaleFactor;
+
         private double _dpiX;
         private double _dpiY;
         
         public ImageCanvas()
         {
             InitializeComponent();
+            _scaleFactor = new Size(1, 1);
         }
 
         public void SetOverlay(IEnumerable<UIElement> toAdd)
@@ -44,6 +47,24 @@ namespace SharpMarker
         public void ClearOverlay()
         {
             canvasOverlay.Children.Clear();
+        }
+
+        public void ZoomIn()
+        {
+            SetScaleFactor(_scaleFactor.Width + 0.5, _scaleFactor.Height + 0.5);
+        }
+
+        public void ZoomOut()
+        {
+            SetScaleFactor(Math.Max(1.0, _scaleFactor.Width - 0.5), Math.Max(1.0, _scaleFactor.Height - 0.5));
+        }
+
+        private void SetScaleFactor(double x, double y)
+        {
+            _scaleFactor = new Size(x, y);
+
+            mainImage.RenderTransform = new ScaleTransform(x, y, _widthPixels / 2.0, _heightPixels / 2.0);
+            SetControlSizes(_widthPixels * x, _heightPixels * y);
         }
 
         public void SetSource(BitmapSource source)
@@ -78,15 +99,20 @@ namespace SharpMarker
             // Fix the width and height of the image to that of the bitmap so that we
             // correctly align to device pixels. If the bitmap and image are different
             // sizes WPF will try to be smart and make it fit which can cause blurring.
-            mainImage.Width = _bitmap.PixelWidth;
-            mainImage.Height = _bitmap.PixelHeight;
+            SetControlSizes(_bitmap.PixelWidth, _bitmap.PixelHeight);
             mainImage.Source = _bitmap;
+        }
 
-            canvas.Width = _bitmap.PixelWidth;
-            canvas.Height = _bitmap.PixelHeight;
+        private void SetControlSizes(double x, double y)
+        {
+            mainImage.Width = x;
+            mainImage.Height = y;
 
-            canvasOverlay.Width = _bitmap.PixelWidth;
-            canvasOverlay.Height = _bitmap.PixelHeight;
+            canvas.Width = x;
+            canvas.Height = y;
+
+            canvasOverlay.Width = x;
+            canvasOverlay.Height = y;
         }
 
         public void Crop(Rect rect)

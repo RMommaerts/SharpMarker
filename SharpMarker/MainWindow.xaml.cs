@@ -120,5 +120,15 @@ namespace SharpMarker
             btnMeasure.IsEnabled = false;
             _SetActiveTool(new MeasureTool(imageCanvas), delegate { btnMeasure.IsEnabled = true; });
         }
+
+        private void btnZoomIn_Click(object sender, RoutedEventArgs e)
+        {
+            imageCanvas.ZoomIn();
+        }
+
+        private void btnZoomOut_Click(object sender, RoutedEventArgs e)
+        {
+            imageCanvas.ZoomOut();
+        }
     }
 }
